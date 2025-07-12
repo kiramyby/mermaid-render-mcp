@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mermaid-render-mcp:
+    build: .
+    container_name: mermaid-render-mcp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - /dev/shm:/dev/shm
+    security_opt:
+      - seccomp:unconfined

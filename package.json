@@ -1,0 +1,12 @@
+{
+  "name": "mermaid-render-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for rendering Mermaid charts to images",
+  "type": "module",
+  "main": "png-server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mermaid": "^10.6.1",
+    "puppeteer": "^22.12.1"
+  }
+}
