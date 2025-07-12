@@ -1,133 +1,215 @@
-# Mermaid Render MCP Server
+# Mermaid 渲染服务
 
-A Model Context Protocol (MCP) server that provides Mermaid diagram rendering capabilities using the mermaid.ink service.
+一个基于 Model Context Protocol (MCP) 的 Mermaid 图表渲染服务，支持将 Mermaid 代码渲染为 PNG 或 SVG 图片。
 
-## Features
+## 功能特性
 
-- **render_mermaid**: Render Mermaid diagrams to PNG or SVG format
-- **encode_mermaid**: Encode Mermaid code to mermaid.ink compatible format
-- **decode_mermaid**: Decode encoded strings back to Mermaid code
+- 🎨 支持 PNG 和 SVG 格式输出
+- 🌐 HTTP REST API 接口
+- 🔄 Mermaid 代码编码/解码
+- 📊 支持所有 Mermaid 图表类型（流程图、时序图、类图、甘特图、饼图等）
+- 🚀 基于 mermaid.ink 在线渲染
 
-## Quick Start
+## 快速开始
 
-### Using Docker Compose
-
-```bash
-docker-compose up -d
-```
-
-### Local Development
+### 安装依赖
 
 ```bash
 npm install
-npm start
 ```
 
-### Testing and Image Download
+### 环境配置
+
+复制 `.env.example` 文件为 `.env` 并根据需要修改配置：
 
 ```bash
+cp .env.example .env
+```
+
+#### 环境变量说明
+
+- `PORT`: 服务器端口（默认: 3000）
+- `BASE_URL`: 服务器基础URL（默认: `http://localhost:3000`）
+- `TEST_SERVER_URL`: 测试时使用的服务器URL（默认: `http://localhost:3000`）
+- `OUTPUT_DIR`: 测试输出目录（默认: ./output）
+- `REQUEST_TIMEOUT`: HTTP请求超时时间（毫秒，默认: 30000）
+- `MCP_TIMEOUT`: MCP服务超时时间（毫秒，默认: 10000）
+- `HEALTH_CHECK_TIMEOUT`: 健康检查超时时间（毫秒，默认: 5000）
+
+### 启动服务
+
+```bash
+# 启动 HTTP 服务器
+npm start
+
+# 开发模式（自动重启）
+npm run dev
+
+# 运行测试
 npm test
 ```
 
-The test client will download and save rendered diagrams to the `./output` directory in both PNG and SVG formats.
+服务默认运行在 `http://localhost:3000`
 
-## Tools
+## API 接口
 
-### 1. render_mermaid
+### 1. 渲染图表
 
-Renders a Mermaid diagram using mermaid.ink service.
+#### 渲染请求
 
-**Parameters:**
+```http
+POST /render
+Content-Type: application/json
 
-- `mermaid_code` (string, required): The Mermaid diagram code
-- `format` (string, optional): Output format ("png" or "svg", default: "png")
-
-**Example:**
-
-```mermaid
-graph TD
-    A[Start] --> B[Process]
-    B --> C[End]
+{
+  "mermaidCode": "graph TD\n    A[开始] --> B[处理]\n    B --> C[结束]",
+  "format": "png"
+}
 ```
 
-### 2. encode_mermaid
+#### 请求字段
 
-Encodes Mermaid code to the compressed format used by mermaid.ink.
+- `mermaidCode` (string, 必需): Mermaid 图表代码
+- `format` (string, 可选): 输出格式，支持 "png" 或 "svg"，默认 "png"
 
-**Parameters:**
+#### 渲染响应
 
-- `mermaid_code` (string, required): The Mermaid diagram code to encode
+- 成功: 返回图片文件（二进制流）
+- Content-Type: `image/png` 或 `image/svg+xml`
 
-### 3. decode_mermaid
+#### 错误响应
 
-Decodes an encoded string back to readable Mermaid code.
-
-**Parameters:**
-
-- `encoded_string` (string, required): The encoded string (with or without "pako:" prefix)
-
-## Usage Examples
-
-### Basic Flowchart
-
-```mermaid
-graph TD
-    A[Christmas] -->|Get money| B(Go shopping)
-    B --> C{Let me think}
-    C -->|One| D[Laptop]
-    C -->|Two| E[iPhone]
-    C -->|Three| F[fa:fa-car Car]
+```json
+{
+  "error": "mermaidCode is required"
+}
 ```
 
-### Sequence Diagram
+### 2. 编码 Mermaid 代码
 
-```mermaid
-sequenceDiagram
-    participant A as Alice
-    participant B as Bob
-    A->>B: Hello Bob, how are you?
-    B-->>A: Great!
+#### 编码请求
+
+```http
+POST /encode
+Content-Type: application/json
+
+{
+  "mermaidCode": "graph TD\n    A[开始] --> B[处理]"
+}
 ```
 
-### Class Diagram
+#### 编码响应
 
-```mermaid
-classDiagram
-    class Animal {
-        +String name
-        +int age
-        +makeSound()
-    }
-    class Dog {
-        +String breed
-        +bark()
-    }
-    Animal <|-- Dog
+```json
+{
+  "encoded": "pako:eNpLyU9VqE4sSc4IVrJSUErOyS9VqihKzEvPTSxTslJQSsvMS1fIT0lNLSmuBMvOAKpyTc4vbWHgFRUJBqr-",
+  "urls": {
+    "png": "https://mermaid.ink/img/pako:eNpLyU9VqE4sSc4IVrJSUErOyS9VqihKzEvPTSxTslJQSsvMS1fIT0lNLSmuBMvOAKpyTc4vbWHgFRUJBqr-",
+    "svg": "https://mermaid.ink/svg/pako:eNpLyU9VqE4sSc4IVrJSUErOyS9VqihKzEvPTSxTslJQSsvMS1fIT0lNLSmuBMvOAKpyTc4vbWHgFRUJBqr-"
+  }
+}
 ```
 
-## Docker Deployment
+### 3. 解码 Mermaid 代码
 
-The service is containerized and can be deployed using Docker Compose:
+#### 解码请求
+
+```http
+POST /decode
+Content-Type: application/json
+
+{
+  "encodedString": "pako:eNpLyU9VqE4sSc4IVrJSUErOyS9VqihKzEvPTSxTslJQSsvMS1fIT0lNLSmuBMvOAKpyTc4vbWHgFRUJBqr-"
+}
+```
+
+#### 解码响应
+
+```json
+{
+  "mermaidCode": "graph TD\n    A[开始] --> B[处理]"
+}
+```
+
+### 4. 健康检查
+
+#### 健康检查请求
+
+```http
+GET /health
+```
+
+#### 健康检查响应
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-07-12T10:30:00.000Z",
+  "service": "mermaid-render-mcp",
+  "version": "1.0.0"
+}
+```
+
+## 支持的图表类型
+
+- 流程图 (Flowchart)
+- 时序图 (Sequence Diagram)
+- 类图 (Class Diagram)
+- 甘特图 (Gantt Chart)
+- 饼图 (Pie Chart)
+- 状态图 (State Diagram)
+- 用户旅程图 (User Journey)
+- Git 图 (Git Graph)
+- ER 图 (Entity Relationship Diagram)
+
+## 使用示例
+
+### 使用 curl 渲染流程图
 
 ```bash
-# Start the service
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the service
-docker-compose down
+curl -X POST http://localhost:3000/render \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mermaidCode": "graph TD\n    A[用户访问] --> B{是否登录?}\n    B -->|是| C[显示首页]\n    B -->|否| D[跳转登录页]",
+    "format": "png"
+  }' \
+  --output flowchart.png
 ```
 
-## Environment Variables
+### 使用 JavaScript 客户端
 
-- `NODE_ENV`: Set to "production" for production deployment
+```javascript
+const response = await fetch('http://localhost:3000/render', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    mermaidCode: `sequenceDiagram
+      participant A as 客户端
+      participant B as 服务器
+      A->>B: 发送请求
+      B-->>A: 返回响应`,
+    format: 'svg'
+  })
+});
 
-## Health Check
+const svgData = await response.text();
+```
 
-The service includes a health check endpoint that verifies the server is running properly.
+## Docker 部署
 
-## License
+```bash
+# 构建镜像
+docker build -t mermaid-render-mcp .
 
-MIT
+# 运行容器
+docker run -p 3000:3000 mermaid-render-mcp
+
+# 使用 Docker Compose
+docker-compose up
+```
+
+## 许可证
+
+MIT License

@@ -8,6 +8,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import pako from "pako";
 import axios from "axios";
+import dotenv from "dotenv";
+
+// 加载环境变量
+dotenv.config();
 
 class MermaidMCPServer {
   constructor() {
@@ -166,7 +170,8 @@ class MermaidMCPServer {
       const imageUrl = `${baseUrl}/${encoded}`;
 
       // Test if the URL is accessible
-      const response = await axios.head(imageUrl, { timeout: 10000 });
+      const timeout = parseInt(process.env.MCP_TIMEOUT) || 10000;
+      const response = await axios.head(imageUrl, { timeout });
       
       if (response.status === 200) {
         return {

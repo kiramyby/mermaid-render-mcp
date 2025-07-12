@@ -1,11 +1,16 @@
 import express from 'express';
 import pako from 'pako';
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+// 加载环境变量
+dotenv.config();
 
 class MermaidHTTPServer {
   constructor() {
     this.app = express();
     this.port = process.env.PORT || 3000;
+    this.requestTimeout = parseInt(process.env.REQUEST_TIMEOUT) || 30000;
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -74,7 +79,7 @@ class MermaidHTTPServer {
           method: 'GET',
           url: url,
           responseType: 'stream',
-          timeout: 30000,
+          timeout: this.requestTimeout,
           headers: {
             'User-Agent': 'mermaid-render-mcp/1.0.0'
           }

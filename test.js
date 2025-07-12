@@ -1,12 +1,18 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// 加载环境变量
+dotenv.config();
 
 // 创建一个HTTP客户端来测试Mermaid渲染和图片保存
 class MermaidRenderClient {
-  constructor(baseUrl = 'http://localhost:3000') {
+  constructor(baseUrl = process.env.TEST_SERVER_URL || 'http://localhost:3000') {
     this.baseUrl = baseUrl;
-    this.outputDir = './output';
+    this.outputDir = process.env.OUTPUT_DIR || './output';
+    this.requestTimeout = parseInt(process.env.REQUEST_TIMEOUT) || 30000;
+    this.healthCheckTimeout = parseInt(process.env.HEALTH_CHECK_TIMEOUT) || 5000;
     this.ensureOutputDir();
   }
 
@@ -31,7 +37,7 @@ class MermaidRenderClient {
           format: 'png' // 或者可以设置为 'svg'
         },
         responseType: 'stream',
-        timeout: 30000,
+        timeout: this.requestTimeout,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -68,7 +74,7 @@ class MermaidRenderClient {
           format: format
         },
         responseType: 'stream',
-        timeout: 30000,
+        timeout: this.requestTimeout,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -274,7 +280,7 @@ class MermaidRenderClient {
     // 首先检查服务器是否可达
     try {
       console.log('🔍 Checking server connectivity...');
-      await axios.get(`${this.baseUrl}/health`, { timeout: 5000 });
+      await axios.get(`${this.baseUrl}/health`, { timeout: this.healthCheckTimeout });
       console.log('✅ Server is accessible\n');
     } catch (error) {
       console.error(`❌ Cannot connect to server at ${this.baseUrl}`);
