@@ -1,150 +1,133 @@
-# Mermaid Render MCP
+# Mermaid Render MCP Server
 
-一个用于渲染 Mermaid 图表的HTTP服务器。支持输入 Mermaid 代码，输出 PNG 或 SVG 图像。
+A Model Context Protocol (MCP) server that provides Mermaid diagram rendering capabilities using the mermaid.ink service.
 
-## 功能特性
+## Features
 
-- 🎨 支持 Mermaid 图表渲染（流程图、序列图、甘特图等）
-- 🖼️ 输出 PNG 和 SVG 格式
-- 📏 可自定义图像尺寸
-- 🌐 HTTP REST API 接口
+- **render_mermaid**: Render Mermaid diagrams to PNG or SVG format
+- **encode_mermaid**: Encode Mermaid code to mermaid.ink compatible format
+- **decode_mermaid**: Decode encoded strings back to Mermaid code
 
-## 快速开始
+## Quick Start
 
-### Docker 部署 (推荐)
+### Using Docker Compose
 
 ```bash
-# 构建并启动
-docker-compose up --build
-
-# 后台运行
-docker-compose up -d --build
+docker-compose up -d
 ```
 
-### 本地运行
+### Local Development
 
 ```bash
-# 安装依赖
 npm install
-
-# 启动服务器
-node png-server.js
+npm start
 ```
 
-## API 接口
-
-### 健康检查
-
-```http
-GET /health
-```
-
-### 渲染为 Base64
-
-```http
-POST /render
-Content-Type: application/json
-
-{
-  "code": "graph TD\n    A[开始] --> B[结束]",
-  "width": 800,
-  "height": 600,
-  "format": "png"
-}
-```
-
-**参数：**
-
-- `code` (string, 必需): Mermaid 图表代码
-- `width` (number, 可选): 图像宽度，默认 800px
-- `height` (number, 可选): 图像高度，默认 600px
-- `format` (string, 可选): 输出格式 "png" 或 "svg"，默认 "png"
-
-### 渲染为文件
-
-```http
-POST /render/image
-Content-Type: application/json
-
-{
-  "code": "graph TD\n    A[开始] --> B[结束]",
-  "format": "png"
-}
-```
-
-## 测试
+### Testing and Image Download
 
 ```bash
-# 甘特图渲染测试
-node test-gantt.js
-
-# 快速测试
-node test-gantt.js --quick
+npm test
 ```
 
-## 使用示例
+The test client will download and save rendered diagrams to the `./output` directory in both PNG and SVG formats.
 
-### 流程图
+## Tools
+
+### 1. render_mermaid
+
+Renders a Mermaid diagram using mermaid.ink service.
+
+**Parameters:**
+
+- `mermaid_code` (string, required): The Mermaid diagram code
+- `format` (string, optional): Output format ("png" or "svg", default: "png")
+
+**Example:**
 
 ```mermaid
 graph TD
-    A[开始] --> B[处理数据]
-    B --> C{检查结果}
-    C -->|成功| D[保存]
-    C -->|失败| E[重试]
-    E --> B
-    D --> F[结束]
+    A[Start] --> B[Process]
+    B --> C[End]
 ```
 
-### 序列图
+### 2. encode_mermaid
+
+Encodes Mermaid code to the compressed format used by mermaid.ink.
+
+**Parameters:**
+
+- `mermaid_code` (string, required): The Mermaid diagram code to encode
+
+### 3. decode_mermaid
+
+Decodes an encoded string back to readable Mermaid code.
+
+**Parameters:**
+
+- `encoded_string` (string, required): The encoded string (with or without "pako:" prefix)
+
+## Usage Examples
+
+### Basic Flowchart
+
+```mermaid
+graph TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[fa:fa-car Car]
+```
+
+### Sequence Diagram
 
 ```mermaid
 sequenceDiagram
-    participant A as 客户端
-    participant B as 服务器
-    A->>B: 发送请求
-    B-->>A: 返回响应
+    participant A as Alice
+    participant B as Bob
+    A->>B: Hello Bob, how are you?
+    B-->>A: Great!
 ```
 
-### 甘特图
+### Class Diagram
 
 ```mermaid
-gantt
-    title 项目开发计划
-    dateFormat  YYYY-MM-DD
-    section 需求分析
-    需求收集           :done,    des1, 2024-01-01, 2024-01-05
-    需求分析           :done,    des2, after des1, 3d
-    需求评审           :active,  des3, after des2, 2d
-    section 开发阶段
-    前端开发           :         dev1, after des3, 10d
-    后端开发           :         dev2, after des3, 12d
-    测试               :         test1, after dev1, 3d
+classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +String breed
+        +bark()
+    }
+    Animal <|-- Dog
 ```
 
-## 测试使用
+## Docker Deployment
 
-1. **启动服务器**
-   ```bash
-   node png-server.js
-   ```
+The service is containerized and can be deployed using Docker Compose:
 
-2. **运行测试**
-   ```bash
-   # 完整测试
-   node test-gantt.js
-   
-   # 快速测试
-   node test-gantt.js --quick
-   ```
+```bash
+# Start the service
+docker-compose up -d
 
-3. **查看结果**
-   - 测试文件保存在 `test-output/` 目录
-   - 包含 PNG、SVG 和 Base64 格式输出
+# View logs
+docker-compose logs -f
 
-## 技术栈
+# Stop the service
+docker-compose down
+```
 
-- **Node.js** - 运行时环境
-- **Express.js** - HTTP 服务器
-- **Puppeteer** - 浏览器自动化和图像渲染
-- **Mermaid** - 图表渲染引擎
+## Environment Variables
+
+- `NODE_ENV`: Set to "production" for production deployment
+
+## Health Check
+
+The service includes a health check endpoint that verifies the server is running properly.
+
+## License
+
+MIT

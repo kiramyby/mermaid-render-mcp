@@ -1,15 +1,26 @@
 version: '3.8'
 
 services:
-  mermaid-render-mcp:
+  mermaid-mcp:
     build: .
     container_name: mermaid-render-mcp
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - "3000:3000"
     volumes:
-      - /dev/shm:/dev/shm
-    security_opt:
-      - seccomp:unconfined
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mermaid-network
+
+networks:
+  mermaid-network:
+    driver: bridge
